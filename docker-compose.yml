@@ -1,0 +1,39 @@
+
+services:
+  traefik:
+    image: traefik:v3.2.2
+    container_name: traefik
+    command:
+      - "--api.insecure=true"
+      # configures traefik to use the docker provider
+      # this will make traefik introspect the running docker containers
+      # and route traffic to them if they have the correct labels
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    ports:
+      # maps port 8080 on the host to port 80 on the container
+      - "8080:80"
+    volumes:
+      # mounts the docker socket into the traefik container
+      # this is required for traefik to be able to listen to docker events
+      # and check other container's labels
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+
+  whoami:
+    image: traefik/whoami
+    container_name: whoami
+    labels:
+      # enables traefik for this container
+      - "traefik.enable=true"
+      # configures traefik to route traffic from a request to "localhost" to this container
+      - "traefik.http.routers.whoami.rule=Host(`localhost`)"
+      # tells traefik that this (whoami) container is listening on port 80
+      - "traefik.http.services.whoami.loadbalancer.server.port=80"
+      # creates a middleware that will forward the request to the auth service
+      # host.docker.internal is a special DNS name that resolves to the host machine
+      - "traefik.http.middlewares.fwd-auth.forwardauth.address=http://host.docker.internal:3000/auth"
+      # allows traefik to forward the "X-User-Groups" header created by the middleware header to the whoami container
+      - "traefik.http.middlewares.fwd-auth.forwardauth.authResponseHeaders=X-User-Groups"
+      # attaches the middleware to the whoami router
+      - "traefik.http.routers.whoami.middlewares=fwd-auth@docker"
