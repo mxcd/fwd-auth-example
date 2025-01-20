@@ -6,6 +6,10 @@ The custom forward auth service is written in TypeScript and uses the express fr
 
 The `docker-compose.yml` bootstraps a compose network with traefik and whoami as services.  
 
+## Video
+This repository is the companion learning material for this video:
+[![Watch the video](https://img.youtube.com/vi/qn_C7ZlsRGM/maxresdefault.jpg)](https://youtu.be/qn_C7ZlsRGM)
+
 ## Usage
 To install dependencies:
 
